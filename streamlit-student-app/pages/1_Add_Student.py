@@ -14,7 +14,15 @@ with st.form("add_student_form"):
     submitted = st.form_submit_button("Add Student")
 
     if submitted:
-        if name and email:
+        import re
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        is_valid_email = re.match(email_pattern, email)
+
+        if not name or not email:
+            st.warning("Please fill in both fields.")
+        elif not is_valid_email:
+            st.warning("⚠️ Please enter a valid email address (e.g., student@example.com).")
+        else:
             try:
                 conn = get_connection()
                 cur = conn.cursor()
@@ -30,23 +38,3 @@ with st.form("add_student_form"):
                 st.error("⚠️ A student with that email already exists.")
             except Exception as e:
                 st.error(f"Error: {e}")
-        else:
-            st.warning("Please fill in both fields.")
-
-st.markdown("---")
-st.subheader("Current Students")
-
-try:
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id, name, email FROM students10 ORDER BY name;")
-    students = cur.fetchall()
-    cur.close()
-    conn.close()
-
-    if students:
-        st.table([{"ID": s[0], "Name": s[1], "Email": s[2]} for s in students])
-    else:
-        st.info("No students yet.")
-except Exception as e:
-    st.error(f"Error: {e}")
